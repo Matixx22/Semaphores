@@ -1,11 +1,8 @@
 CC=gcc
 CFLAGS= 
 
-main: main.o queue.o
-	$(CC) -o main main.o queue.o -lrt -pthread
-
-main2: main2.o queue.o
-	$(CC) -o main2 main2.o queue.o -lrt -pthread
+main: main.o sem.o queue.o
+	$(CC) -o program main.o sem.o queue.o -lrt -pthread
 
 clean:
-	rm -f main main2 main.o main2.o queue.o
+	rm -f program main.o queue.o sem.o
