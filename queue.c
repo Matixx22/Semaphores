@@ -29,7 +29,7 @@ struct Queue* createQueue(unsigned capacity, int id)
     queue->id = id;
 
     queue->mutex = make_sem(1);
-    queue->empty = make_sem(capacity-1);
+    queue->empty = make_sem(capacity);
     queue->full = make_sem(0);
 
     return queue;
@@ -52,9 +52,6 @@ int isEmpty(struct Queue* queue)
 // It changes rear and size
 void enqueue(struct Queue* queue, int item)
 {
-    if (isFull(queue))
-        return;
-
     sem_wait(queue->empty);
     sem_wait(queue->mutex);
 
@@ -72,10 +69,6 @@ int dequeue(struct Queue* queue)
 {
     sem_wait(queue->full);
     sem_wait(queue->mutex);
-    if (isEmpty(queue))
-        return INT_MIN;
-
-
 
     int item = queue->array[queue->front];
     queue->front = (queue->front + 1) % queue->capacity;
