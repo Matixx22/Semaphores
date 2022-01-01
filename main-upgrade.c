@@ -8,22 +8,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
-#include <signal.h>
 #include "queue.h"
 
-#define Q_CAP 10
-#define Q_NUM 2 
-#define P_NUM 2
-#define C_NUM 2
+#define Q_CAP 100
+#define Q_NUM 10 
 
-pthread_t prod_t[P_NUM];
-pthread_t cons_t[C_NUM];
+pthread_t prod_thread1, prod_thread2, cons_thread1, cons_thread2;
 
 struct Queue* queues[Q_NUM];
-
-void sig_handler(int sig) {
-	printf("Received special message. Clearing queues... Quiting...\n");
-}
 
 void prod_alarm() {
 	int i;
@@ -36,7 +28,14 @@ void prod_alarm() {
 void producer(int item, int tid) {
 	int id = rand() % Q_NUM;
 
-	if (front(queues[id]) == INT_MAX) pthread_exit(NULL);
+	// while there is a full queue choose queue with index++ until find not full queue
+	while (isFull(queues[id])) {
+		printf("Producer id %d waiting... Changing queue from %d to %d\n", tid, id, (id+1)%Q_NUM);
+		id = (id+1) % Q_NUM;
+		sleep(1);	
+	}
+
+	if (front(queues[id]) == INT_MAX) return;
 
 	enqueue(queues[id], item);
 	printf("Producer id %d produced item: %d to queue: %d\n", tid, item, id);
@@ -46,9 +45,15 @@ int consumer(int tid) {
 	int item;
 	int id = rand() % Q_NUM;
 
+	// if queue is empty choose queue with index++ until find not empty queue
+	while (isEmpty(queues[id])) {
+		printf("Consumer id %d waiting... Changing queue from %d to %d\n", tid, id, (id+1)%Q_NUM);
+		id = (id+1) % Q_NUM;
+		sleep(1);
+	}
 	item = dequeue(queues[id]);
 	if (item == INT_MAX) {
-		//printf("Alarm received by consumer %d from queue %d. Clearing queues...\n", tid, id);	
+		printf("Alarm received by consumer %d from queue %d. Clearing queues...\n", tid, id);	
 		return(INT_MAX);
 	}
 
@@ -62,7 +67,7 @@ void* prod1() {
 	while (i < 10) {
 		producer(i, pthread_self());
 		++i;
-		for (j = 0; j < 40; ++j) { for (k = 0; k < 9999999; ++k) {} }
+		for (j = 0; j < 10; ++j) { for (k = 0; k < 9999999; ++k) {} }
 	}
 }
 
@@ -71,28 +76,22 @@ void* prod2() {
 	while (i < 15) {
 		producer(i, pthread_self());
 		++i;
-		for (j = 0; j < 2; ++j) { for (k = 0; k < 9999999; ++k) {} }
+		for (j = 0; j < 20; ++j) { for (k = 0; k < 9999999; ++k) {} }
 	}
 	prod_alarm();
 }
 
-void* cons1(void* tid) {
+void* cons1() {
 	int item;
 	int i = 0, j, k;
 
-	while (i < 10) {
+	while (i < 100) {
 		item = consumer(pthread_self());
 		if (item == INT_MAX) {
-			//send signal to other consumer threads
-			for (j = 0; j < C_NUM; ++j) {
-				pthread_kill(cons_t[j], SIGUSR1);
-			}
 			pthread_exit(NULL);
 		}
-
-
 		++i;
-		for (j = 0; j < 10; ++j) { for (k = 0; k < 9999999; ++k) {} }
+		for (j = 0; j < 1; ++j) { for (k = 0; k < 9999999; ++k) {} }
 	}
 }
 
@@ -100,37 +99,35 @@ void* cons2() {
 	int item;
 	int i = 0, j, k;
 
-	while (i < 4) {
+	while (i < 40) {
 		item = consumer(pthread_self());
 		if (item == INT_MAX) {
 			pthread_exit(NULL);	
 		}
 		++i;
-		for (j = 0; j < 30; ++j) { for (k = 0; k < 9999999; ++k) {} }
+		for (j = 0; j < 3; ++j) { for (k = 0; k < 9999999; ++k) {} }
 	}
 }
 
 int main(int argc, char** argv) {
 	int i;
 	int item;
-
 	srand(time(NULL));	
-	signal(SIGUSR1, sig_handler);
 
 	// init queues
 	for (i = 0; i < Q_NUM; ++i) {
 		queues[i] = createQueue(Q_CAP, i);
 	}
 
-	pthread_create(&prod_t[0], NULL, prod1, (void*)0);
-	pthread_create(&prod_t[1], NULL, prod2, (void*)1);
-	pthread_create(&cons_t[0], NULL, cons1, (void*)2);
-	pthread_create(&cons_t[1], NULL, cons2, (void*)3);
+	pthread_create(&prod_thread1, NULL, prod1, NULL);
+	pthread_create(&prod_thread2, NULL, prod2, NULL);
+	pthread_create(&cons_thread1, NULL, cons1, NULL);
+	pthread_create(&cons_thread2, NULL, cons2, NULL);
 
-	pthread_join(prod_t[0], NULL);
-	pthread_join(prod_t[1], NULL);
-	pthread_join(cons_t[0], NULL);
-	pthread_join(cons_t[1], NULL);
+	pthread_join(prod_thread1, NULL);
+	pthread_join(prod_thread2, NULL);
+	pthread_join(cons_thread1, NULL);
+	pthread_join(cons_thread2, NULL);
 
 	return 0;
 }

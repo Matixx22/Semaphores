@@ -81,7 +81,9 @@ int dequeue(struct Queue* queue)
     queue->size = queue->size - 1;
 
     if (item == INT_MAX) {
-    	queue->front = queue->size = 0;
+    	queue->front = queue->size = queue->capacity = 0;
+        queue->empty = make_sem(queue->capacity);
+        queue->full = make_sem(0);
 	printf("Clear queue\n");
     }
     
