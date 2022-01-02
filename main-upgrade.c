@@ -30,7 +30,7 @@ void prod_alarm(int tid) {
 	int i;
 	for (i = 0; i < Q_NUM; ++i) {
 		printf("Producent id %d proudced special message to queue %d\n", tid, i);
-		enqueue(queues[i], INT_MAX, tid);
+		enqueue(queues[i], INT_MAX);
 	}
 	//printf("Alarm produced\n");
 }
@@ -47,7 +47,7 @@ void producer(int item, int tid) {
 
 	if (front(queues[id]) == INT_MAX) pthread_exit(NULL);
 
-	enqueue(queues[id], item, tid);
+	enqueue(queues[id], item);
 	printf("Producer id %d produced item: %d to queue: %d\n", tid, item, id);
 }
 
@@ -62,7 +62,7 @@ int consumer(int tid) {
 		sleep(1);
 	}
 
-	item = dequeue(queues[id], tid);
+	item = dequeue(queues[id]);
 	if (item == INT_MAX) {
 		//printf("Alarm received by consumer %d from queue %d. Clearing queues...\n", tid, id);	
 		return(INT_MAX);

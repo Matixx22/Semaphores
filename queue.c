@@ -37,7 +37,7 @@ int isEmpty(struct Queue* queue) {
     return (queue->size == 0);
 }
 
-void enqueue(struct Queue* queue, int item, int prod_id) {
+void enqueue(struct Queue* queue, int item) {
     sem_wait(queue->empty);
     sem_wait(queue->mutex);
 
@@ -52,7 +52,7 @@ void enqueue(struct Queue* queue, int item, int prod_id) {
     sem_post(queue->full);
 }
  
-int dequeue(struct Queue* queue, int cons_id) {
+int dequeue(struct Queue* queue) {
     sem_wait(queue->full);
     sem_wait(queue->mutex);
 
