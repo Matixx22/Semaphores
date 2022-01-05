@@ -24,11 +24,6 @@ struct Queue* queues[Q_NUM];
 
 bool isAlarm;
 
-void sig_handler(int sig) {
-	printf("Consumer id %d received special message. Quiting...\n", gettid());
-	pthread_exit(NULL);
-}
-
 void prod_alarm(int tid) {
 	printf("Producer %d produced alarm\n", tid);
 	isAlarm = true;
@@ -111,7 +106,6 @@ int main(int argc, char** argv) {
 	int item;
 
 	srand(time(NULL));	
-	signal(SIGUSR1, sig_handler);
 
 	isAlarm = false;
 
