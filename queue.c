@@ -41,13 +41,10 @@ void enqueue(struct Queue* queue, int item) {
     sem_wait(queue->empty);
     sem_wait(queue->mutex);
 
-    if (item == INT_MAX) {
-		queue->array[queue->front] = item;
-    } else {
-        queue->rear = (queue->rear + 1) % queue->capacity;
-        queue->array[queue->rear] = item;
-        queue->size = queue->size + 1;
-    }
+    queue->rear = (queue->rear + 1) % queue->capacity;
+    queue->array[queue->rear] = item;
+    queue->size = queue->size + 1;
+
     sem_post(queue->mutex);
     sem_post(queue->full);
 }
@@ -77,4 +74,12 @@ int rear(struct Queue* queue) {
         return INT_MIN;
     return queue->array[queue->rear];
 }
- 
+
+void print_queue(struct Queue* queue) {
+	int i;
+	printf("front ");
+	for (i = 0; i < queue->size; ++i) {
+		printf("%d ", queue->array[i]);
+	}
+	printf("end\n");
+}
